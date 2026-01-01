@@ -1,19 +1,21 @@
 import os
+import re
 from dotenv import load_dotenv
+
+load_dotenv()
 
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     ContextTypes,
     CommandHandler,
-    MessageHandler,
-    filters,
 )
 
-load_dotenv()
+from src.logging import log_command
 
 
-async def suggest(update: Update, context: ContextTypes.DEFAULT_TYPE):
+@log_command
+async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message is None or update.effective_chat is None:
         return
 
@@ -23,33 +25,25 @@ async def suggest(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     for line in user_message.splitlines()[1:]:
         try:
-            guess, raw_result = line.split(": ")
+            match = re.match(r"^([a-zA-Z]{5}): ([012]{5})$", line)
+            if not match:
+                raise ValueError(f"Invalid format: {line}")
+            guess, raw_result = match.groups()
             result = [
                 "⬜️" if square == "0" else "🟩" if square == "1" else "🟨"
                 for square in raw_result
             ]
-        except:
+        except Exception:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=f"Failed to parse line: {line}",
             )
-            return
+            raise
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=f"You guessed {guess}: {''.join(result)}",
         )
-
-
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message is None or update.effective_chat is None:
-        return
-
-    user_message = update.message.text
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"You said: {user_message}",
-    )
 
 
 def main():
@@ -58,10 +52,7 @@ def main():
         raise ValueError("Telegram bot token not found")
 
     application = ApplicationBuilder().token(bot_token).build()
-    application.add_handler(CommandHandler("suggest", suggest))
-    application.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message)
-    )
+    application.add_handler(CommandHandler("suggest", suggest_handler))
 
     application.run_polling()
 
