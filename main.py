@@ -13,6 +13,7 @@ from telegram.ext import (
 
 from src.logging import log_command
 from src.session import sessions
+from src.strategy import EntropyStrategy
 
 
 @log_command
@@ -68,13 +69,20 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # TODO: Replace with actual word suggestion logic
-    result_display = [
-        "⬜️" if c == "0" else "🟩" if c == "1" else "🟨" for c in raw_result
-    ]
+    # Build history display
+    history_lines = []
+    for i, g in enumerate(session.guesses, 1):
+        result_display = "".join(
+            "⬜️" if c == "0" else "🟩" if c == "1" else "🟨" for c in g.result
+        )
+        history_lines.append(f"{g.word}: {result_display} ({i}/6)")
+
+    strategy = EntropyStrategy()
+    new_guess = strategy.execute(guesses=session.guesses)
+
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"{guess.upper()}: {''.join(result_display)} ({len(session.guesses)}/6)\n\nTry: SLATE",
+        text="\n".join(history_lines) + f"\n\nTry: {new_guess}",
     )
 
 

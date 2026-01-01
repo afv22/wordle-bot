@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, NamedTuple
+from typing import  NamedTuple
 
 
 class Guess(NamedTuple):
@@ -11,7 +11,7 @@ class Guess(NamedTuple):
 class GameSession:
     """Stores the state of a Wordle game."""
 
-    guesses: List[Guess] = field(default_factory=list)
+    guesses: list[Guess] = field(default_factory=list)
 
     def add_guess(self, word: str, result: str) -> None:
         self.guesses.append(Guess(word.upper(), result))
