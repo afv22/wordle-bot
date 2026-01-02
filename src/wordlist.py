@@ -1,8 +1,9 @@
 import csv
+from pathlib import Path
 
 
 def load_wordlist(
-    filename: str, max_words: int | None = None
+    filename: Path, max_words: int | None = None
 ) -> list[tuple[str, float]]:
     """Load the top N words with their normalized frequencies.
 
@@ -15,7 +16,7 @@ def load_wordlist(
     """
     words: list[tuple[str, float]] = []
 
-    with open(filename, newline="") as f:
+    with open("wordlists" / filename, newline="") as f:
         reader = csv.DictReader(f)
         for i, row in enumerate(reader):
             if max_words is not None and i >= max_words:
