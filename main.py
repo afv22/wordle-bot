@@ -71,11 +71,11 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Build history display
     history_lines = []
-    for i, g in enumerate(session.guesses, 1):
+    for g in session.guesses:
         result_display = "".join(
             "⬜️" if c == "0" else "🟩" if c == "1" else "🟨" for c in g.result
         )
-        history_lines.append(f"{g.word}: {result_display} ({i}/6)")
+        history_lines.append(f"{result_display}  {g.word}")
 
     suggestions = session.strategy.execute(guesses=session.guesses, n=3)
     suggestions_text = ", ".join(suggestions)
