@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import Counter
 from pathlib import Path
+from typing import Optional
 
 from src.models import Guess
 from src.wordlist import load_wordlist
@@ -13,7 +14,7 @@ class Strategy(ABC):
     def __init__(
         self,
         filename: str = "normalized_scrabble_wordlist.csv",
-        max_words: int = 1000,
+        max_words: Optional[int] = None,
     ) -> None:
         self.wordlist = load_wordlist(
             filename=Path(filename),

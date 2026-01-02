@@ -38,7 +38,7 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     session = sessions.get(update.effective_user.id, update.effective_chat.id)
     if session.strategy is None:
-        session.strategy = EntropyStrategy(max_words=5000)
+        session.strategy = EntropyStrategy()
 
     # Register new guesses
     for line in lines[1:]:
