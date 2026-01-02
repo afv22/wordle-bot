@@ -1,12 +1,10 @@
 from dataclasses import dataclass, field
-from typing import NamedTuple, Optional
+from typing import TYPE_CHECKING, Optional
 
-from src.strategy.base import Strategy
+from src.models import Guess
 
-
-class Guess(NamedTuple):
-    word: str
-    result: str
+if TYPE_CHECKING:
+    from src.strategy.base import Strategy
 
 
 @dataclass
@@ -14,7 +12,7 @@ class GameSession:
     """Stores the state of a Wordle game."""
 
     guesses: list[Guess] = field(default_factory=list)
-    strategy: Optional[Strategy] = None
+    strategy: Optional["Strategy"] = None
 
     def add_guess(self, word: str, result: str) -> None:
         self.guesses.append(Guess(word.upper(), result))

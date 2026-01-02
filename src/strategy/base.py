@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import Counter
 
-from src.session import Guess
+from src.models import Guess
 from src.wordlist import load_wordlist
 
 
@@ -91,4 +91,8 @@ class Strategy(ABC):
         return candidates
 
     @abstractmethod
-    def execute(self, guesses: list[Guess]) -> str: ...
+    def execute(self, guesses: list[Guess], n: int = 1) -> list[str]:
+        """
+        Return the top n suggested guesses.
+        """
+        ...

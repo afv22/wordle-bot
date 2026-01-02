@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from pathlib import Path
 import time
 import uuid
 from functools import wraps
@@ -13,12 +14,12 @@ from telegram.ext import ContextTypes
 class StructuredLogger:
     """JSON structured logger for consistent, parseable log output."""
 
-    def __init__(self, name: str, log_file: str):
+    def __init__(self, name: str, log_dir: Path):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)
 
         if not self.logger.handlers:
-            handler = logging.FileHandler(log_file)
+            handler = logging.FileHandler(log_dir / "bot.log")
             handler.setFormatter(logging.Formatter("%(message)s"))
             self.logger.addHandler(handler)
 
@@ -45,7 +46,7 @@ class StructuredLogger:
         self._log("WARNING", message, **kwargs)
 
 
-logger = StructuredLogger("wordle_bot", os.getenv("LOG_DIR", "./logs"))
+logger = StructuredLogger("wordle_bot", Path(os.getenv("LOG_DIR", "./logs")))
 
 
 def log_command(func: Callable) -> Callable:

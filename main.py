@@ -79,10 +79,11 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         history_lines.append(f"{g.word}: {result_display} ({i}/6)")
 
-    new_guess = session.strategy.execute(guesses=session.guesses)
+    suggestions = session.strategy.execute(guesses=session.guesses, n=3)
+    suggestions_text = ", ".join(suggestions)
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="\n".join(history_lines) + f"\n\nTry: {new_guess}",
+        text="\n".join(history_lines) + f"\n\nTry: {suggestions_text}",
     )
 
 

@@ -1,7 +1,7 @@
 from collections import Counter
 from math import log2
 
-from src.session import Guess
+from src.models import Guess
 from .base import Strategy
 
 
@@ -30,22 +30,24 @@ class EntropyStrategy(Strategy):
 
         return entropy
 
-    def execute(self, guesses: list[Guess]) -> str:
+    def execute(self, guesses: list[Guess], n: int = 1) -> list[str]:
         remaining_words = self._get_remaining_words(guesses)
         if len(remaining_words) == 0:
             raise RuntimeError("No known remaining words")
         if len(remaining_words) == 1:
-            return remaining_words[0][0]
+            return [remaining_words[0][0].upper()]
 
         possible_answers = [word for word, _ in remaining_words]
-        best_guess = possible_answers[0]
-        best_entropy = -1.0
+        possible_set = set(possible_answers)
 
+        # Calculate entropy for all candidates and rank them
+        scored: list[tuple[str, float, bool]] = []
         for candidate, _ in self.wordlist:
             entropy = self._calculate_entropy(candidate, possible_answers)
-            is_possible = candidate in possible_answers
-            if entropy > best_entropy or (entropy == best_entropy and is_possible):
-                best_entropy = entropy
-                best_guess = candidate
+            is_possible = candidate in possible_set
+            scored.append((candidate, entropy, is_possible))
 
-        return best_guess.upper()
+        # Sort by entropy (desc), then by is_possible (True first)
+        scored.sort(key=lambda x: (-x[1], not x[2]))
+
+        return [word.upper() for word, _, _ in scored[:n]]
