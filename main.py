@@ -49,6 +49,8 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get or create session and add the guess
     session = sessions.get(update.effective_user.id, update.effective_chat.id)
     session.add_guess(guess, raw_result)
+    if session.strategy is None:
+        session.strategy = EntropyStrategy(max_words=5000)
 
     # Check for win
     if session.is_won():
@@ -77,9 +79,7 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         history_lines.append(f"{g.word}: {result_display} ({i}/6)")
 
-    strategy = EntropyStrategy(max_words=5000)
-    new_guess = strategy.execute(guesses=session.guesses)
-
+    new_guess = session.strategy.execute(guesses=session.guesses)
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="\n".join(history_lines) + f"\n\nTry: {new_guess}",
