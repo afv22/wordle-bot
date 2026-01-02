@@ -4,6 +4,8 @@ from collections import Counter
 from src.models import Guess
 from src.wordlist import load_wordlist
 
+pattern_cache = {}
+
 
 class Strategy(ABC):
 
@@ -25,6 +27,10 @@ class Strategy(ABC):
           2 = wrong position (yellow)
           0 = not in word (grey)
         """
+        cache_key = (guess, answer)
+        if cache_key in pattern_cache:
+            return pattern_cache[cache_key]
+
         result = ["0"] * 5
         answer_letter_counts = Counter(answer)
 
@@ -40,7 +46,9 @@ class Strategy(ABC):
                 result[i] = "2"
                 answer_letter_counts[letter] -= 1
 
-        return "".join(result)
+        pattern = "".join(result)
+        pattern_cache[cache_key] = pattern
+        return pattern
 
     def _get_remaining_words(self, guesses: list[Guess]) -> list[tuple[str, float]]:
         """
