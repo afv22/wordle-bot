@@ -32,7 +32,7 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(lines) < 2:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=("Usage: /suggest\nWORD: 01020"),
+            text=("Usage: /suggest\nSLATE: 01020"),
         )
         return
 
@@ -45,11 +45,7 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         line = line.strip()
         match = re.match(r"^([a-zA-Z]{5}): ([012]{5})$", line)
         if not match:
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=f"Invalid format: {line}\nExpected: WORD: 01020",
-            )
-            raise ValueError(f"Invalid format: {line}")
+            raise BotException(f"Invalid format: {line}")
 
         guess, raw_result = match.groups()
         session.add_guess(guess, raw_result)
@@ -81,21 +77,7 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         history_lines.append(f"{g.word}: {result_display} ({i}/6)")
 
-    try:
-        suggestions = session.strategy.execute(guesses=session.guesses, n=3)
-    except BotException as e:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=f"An error occurred: {str(e)}",
-        )
-        raise
-    except Exception:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="An unexpected error occurred. Please try again.",
-        )
-        raise
-
+    suggestions = session.strategy.execute(guesses=session.guesses, n=3)
     suggestions_text = ", ".join(suggestions)
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -126,6 +108,21 @@ async def newgame_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    """Global error handler for all uncaught exceptions."""
+
+    if isinstance(context.error, BotException):
+        message = f"An error occurred: {context.error}"
+    else:
+        message = "An unexpected error occurred. Please try again."
+
+    if update and isinstance(update, Update) and update.effective_chat:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=message,
+        )
+
+
 def main():
     bot_token = os.getenv("TELEGRAM_TOKEN")
     if not bot_token:
@@ -134,6 +131,7 @@ def main():
     application = ApplicationBuilder().token(bot_token).build()
     application.add_handler(CommandHandler("suggest", suggest_handler))
     application.add_handler(CommandHandler("newgame", newgame_handler))
+    application.add_error_handler(error_handler)
 
     application.run_polling()
 

@@ -10,8 +10,6 @@ from typing import Any, Callable
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from src.exceptions import BotException
-
 
 class StructuredLogger:
     """JSON structured logger for consistent, parseable log output."""
@@ -99,5 +97,6 @@ def log_command(func: Callable) -> Callable:
                 error_type=type(e).__name__,
                 error_message=str(e),
             )
+            raise
 
     return wrapper
