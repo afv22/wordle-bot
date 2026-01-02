@@ -45,7 +45,7 @@ class StructuredLogger:
         self._log("WARNING", message, **kwargs)
 
 
-logger = StructuredLogger("wordle_bot", os.getenv("LOG_FILE", "./logs/bot.log"))
+logger = StructuredLogger("wordle_bot", os.getenv("LOG_DIR", "./logs"))
 
 
 def log_command(func: Callable) -> Callable:

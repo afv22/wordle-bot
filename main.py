@@ -77,7 +77,7 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         history_lines.append(f"{g.word}: {result_display} ({i}/6)")
 
-    strategy = EntropyStrategy()
+    strategy = EntropyStrategy(max_words=5000)
     new_guess = strategy.execute(guesses=session.guesses)
 
     await context.bot.send_message(
