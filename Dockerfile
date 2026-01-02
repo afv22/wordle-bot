@@ -14,7 +14,7 @@ RUN uv sync --frozen --no-dev
 # Copy application code
 COPY main.py ./
 COPY src/ ./src/
-COPY normalized_wordlist.csv ./
+COPY wordlists/ ./wordlists/ ./
 
 # Run the bot
 CMD ["uv", "run", "python", "main.py"]
