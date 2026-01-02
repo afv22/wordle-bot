@@ -26,7 +26,7 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ):
         return
 
-    # Parse the guess from the command (e.g., "/suggest TRAIN: 01020")
+    # Parse the guesses from the command (e.g., "/suggest TRAIN: 01020")
     lines = update.message.text.splitlines()
     if len(lines) < 2:
         await context.bot.send_message(
@@ -35,22 +35,23 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    line = lines[1].strip()
-    match = re.match(r"^([a-zA-Z]{5}): ([012]{5})$", line)
-    if not match:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=f"Invalid format: {line}\nExpected: WORD: 01020",
-        )
-        raise ValueError(f"Invalid format: {line}")
-
-    guess, raw_result = match.groups()
-
-    # Get or create session and add the guess
     session = sessions.get(update.effective_user.id, update.effective_chat.id)
-    session.add_guess(guess, raw_result)
     if session.strategy is None:
         session.strategy = EntropyStrategy(max_words=5000)
+
+    # Register new guesses
+    for line in lines[1:]:
+        line = line.strip()
+        match = re.match(r"^([a-zA-Z]{5}): ([012]{5})$", line)
+        if not match:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f"Invalid format: {line}\nExpected: WORD: 01020",
+            )
+            raise ValueError(f"Invalid format: {line}")
+
+        guess, raw_result = match.groups()
+        session.add_guess(guess, raw_result)
 
     # Check for win
     if session.is_won():
