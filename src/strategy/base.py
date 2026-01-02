@@ -68,10 +68,10 @@ class Strategy(ABC):
                 # First pass: check green letters (exact matches)
                 for i, letter in enumerate(guess.word):
                     if guess.result[i] == "1":
-                        if word[i] != letter.lower():
+                        if word[i] != letter:
                             is_valid = False
                             break
-                        letter_counts[letter.lower()] -= 1
+                        letter_counts[letter] -= 1
 
                 if not is_valid:
                     continue
@@ -80,17 +80,17 @@ class Strategy(ABC):
                 for i, letter in enumerate(guess.word):
                     if guess.result[i] == "2":
                         # Letter exists but not in this position
-                        if word[i] == letter.lower():
+                        if word[i] == letter:
                             is_valid = False
                             break
-                        if letter_counts.get(letter.lower(), 0) <= 0:
+                        if letter_counts.get(letter, 0) <= 0:
                             is_valid = False
                             break
-                        letter_counts[letter.lower()] -= 1
+                        letter_counts[letter] -= 1
 
                     elif guess.result[i] == "0":
                         # If we have unaccounted instances of this letter, it's incompatible
-                        if letter_counts.get(letter.lower(), 0) > 0:
+                        if letter_counts.get(letter, 0) > 0:
                             is_valid = False
                             break
 

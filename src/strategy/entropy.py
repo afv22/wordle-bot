@@ -36,7 +36,7 @@ class EntropyStrategy(Strategy):
         if len(remaining_words) == 0:
             raise BotException("No known remaining words")
         if len(remaining_words) == 1:
-            return [remaining_words[0][0].upper()]
+            return [remaining_words[0][0]]
 
         possible_answers = [word for word, _ in remaining_words]
         possible_set = set(possible_answers)
@@ -51,4 +51,4 @@ class EntropyStrategy(Strategy):
         # Sort by entropy (desc), then by is_possible (True first)
         scored.sort(key=lambda x: (-x[1], not x[2]))
 
-        return [word.upper() for word, _, _ in scored[:n]]
+        return [word for word, _, _ in scored[:n]]

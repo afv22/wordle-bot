@@ -21,6 +21,6 @@ def load_wordlist(
         for i, row in enumerate(reader):
             if max_words is not None and i >= max_words:
                 break
-            words.append((row["word"], float(row["normalized_frequency"])))
+            words.append((row["word"].upper(), float(row["normalized_frequency"])))
 
     return words
