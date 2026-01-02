@@ -11,6 +11,7 @@ from telegram.ext import (
     CommandHandler,
 )
 
+from src.exceptions import BotException
 from src.logging import log_command
 from src.session import sessions
 from src.strategy import EntropyStrategy
@@ -80,7 +81,21 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         history_lines.append(f"{g.word}: {result_display} ({i}/6)")
 
-    suggestions = session.strategy.execute(guesses=session.guesses, n=3)
+    try:
+        suggestions = session.strategy.execute(guesses=session.guesses, n=3)
+    except BotException as e:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"An error occurred: {str(e)}",
+        )
+        raise
+    except Exception:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="An unexpected error occurred. Please try again.",
+        )
+        raise
+
     suggestions_text = ", ".join(suggestions)
     await context.bot.send_message(
         chat_id=update.effective_chat.id,

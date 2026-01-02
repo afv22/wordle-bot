@@ -10,6 +10,8 @@ from typing import Any, Callable
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from src.exceptions import BotException
+
 
 class StructuredLogger:
     """JSON structured logger for consistent, parseable log output."""

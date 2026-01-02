@@ -1,6 +1,7 @@
 from collections import Counter
 from math import log2
 
+from src.exceptions import BotException
 from src.models import Guess
 from .base import Strategy
 
@@ -33,7 +34,7 @@ class EntropyStrategy(Strategy):
     def execute(self, guesses: list[Guess], n: int = 1) -> list[str]:
         remaining_words = self._get_remaining_words(guesses)
         if len(remaining_words) == 0:
-            raise RuntimeError("No known remaining words")
+            raise BotException("No known remaining words")
         if len(remaining_words) == 1:
             return [remaining_words[0][0].upper()]
 
