@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from src.models import Guess
+from src.strategy import EntropyStrategy
 from src.strategy.base import Strategy
 
 
@@ -10,7 +11,7 @@ class GameSession:
     """Stores the state of a Wordle game."""
 
     guesses: list[Guess] = field(default_factory=list)
-    strategy: Optional[Strategy] = None
+    strategy: Strategy = EntropyStrategy()
 
     def add_guess(self, word: str, result: str) -> None:
         self.guesses.append(Guess(word.upper(), result))

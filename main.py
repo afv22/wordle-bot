@@ -4,9 +4,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     ApplicationBuilder,
+    CallbackQueryHandler,
     ContextTypes,
     CommandHandler,
 )
@@ -37,8 +38,6 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     session = sessions.get(update.effective_user.id, update.effective_chat.id)
-    if session.strategy is None:
-        session.strategy = EntropyStrategy()
 
     # Register new guesses
     for line in lines[1:]:
@@ -83,6 +82,49 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id,
         text="\n".join(history_lines) + f"\n\nTry: {suggestions_text}",
     )
+
+
+@log_command
+async def strategy_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message is None or update.effective_chat is None:
+        return
+
+    keyboard = [
+        [
+            InlineKeyboardButton("Entropy", callback_data="strategy_entropy"),
+            InlineKeyboardButton("Frequency", callback_data="strategy_frequency"),
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Select a strategy:",
+        reply_markup=reply_markup,
+    )
+
+
+async def strategy_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    if (
+        query is None
+        or query.data is None
+        or update.effective_user is None
+        or update.effective_chat is None
+    ):
+        return
+
+    await query.answer()
+
+    session = sessions.get(update.effective_user.id, update.effective_chat.id)
+
+    if query.data == "strategy_entropy":
+        session.strategy = EntropyStrategy()
+        await query.edit_message_text(
+            text="You selected: Entropy\nYour session has been updated."
+        )
+    else:
+        raise BotException(f"Unknown strategy: {query.data}")
 
 
 @log_command
@@ -131,6 +173,10 @@ def main():
     application = ApplicationBuilder().token(bot_token).build()
     application.add_handler(CommandHandler("suggest", suggest_handler))
     application.add_handler(CommandHandler("newgame", newgame_handler))
+    application.add_handler(CommandHandler("strategy", strategy_handler))
+    application.add_handler(
+        CallbackQueryHandler(strategy_callback_handler, pattern="^strategy_")
+    )
     application.add_error_handler(error_handler)
 
     application.run_polling()
