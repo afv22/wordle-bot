@@ -6,10 +6,13 @@ dist/
 wheels/
 *.egg-info
 
+# Environment files
+.DS_Store
+
 # Virtual environments
 .venv
 
-# Environment Variables
+# Environment variables
 .env
 
 # Logs

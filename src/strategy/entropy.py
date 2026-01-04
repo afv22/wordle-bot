@@ -1,6 +1,3 @@
-from collections import Counter
-from math import log2
-
 from src.exceptions import BotException
 from src.models import Guess
 from .base import Strategy
@@ -13,23 +10,9 @@ class EntropyStrategy(Strategy):
     possible answer as a tiebreaker.
     """
 
-    def _calculate_entropy(self, guess: str, possible_answers: list[str]) -> float:
-        """
-        Calculate the entropy (expected information gain) for a candidate guess.
-        Higher entropy = more evenly distributed feedback patterns = better guess.
-        """
-        pattern_counts: Counter[str] = Counter()
-        for answer in possible_answers:
-            pattern = self._get_feedback_pattern(guess, answer)
-            pattern_counts[pattern] += 1
-
-        total = len(possible_answers)
-        entropy = 0.0
-        for count in pattern_counts.values():
-            probability = count / total
-            entropy -= probability * log2(probability)
-
-        return entropy
+    @property
+    def name(self) -> str:
+        return "Entropy"
 
     def execute(self, guesses: list[Guess], n: int = 1) -> list[str]:
         remaining_words = self._get_remaining_words(guesses)

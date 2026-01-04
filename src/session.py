@@ -16,8 +16,8 @@ class GameSession:
     def add_guess(self, word: str, result: str) -> None:
         self.guesses.append(Guess(word.upper(), result))
 
-    def clear(self) -> int:
-        """Clear the session and return the number of guesses that were made."""
+    def reset(self) -> int:
+        """Reset the session and return the number of guesses that were made."""
         count = len(self.guesses)
         self.guesses = []
         return count
@@ -46,12 +46,11 @@ class SessionManager:
             self._sessions[key] = GameSession()
         return self._sessions[key]
 
-    def clear(self, user_id: int, chat_id: int) -> int:
-        """Clear a session and return the number of guesses that were made."""
+    def reset(self, user_id: int, chat_id: int) -> int:
+        """Reset a session and return the number of guesses that were made."""
         key = (user_id, chat_id)
         if key in self._sessions:
-            count = self._sessions[key].clear()
-            del self._sessions[key]
+            count = self._sessions[key].reset()
             return count
         return 0
 

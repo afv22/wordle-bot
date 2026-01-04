@@ -15,7 +15,7 @@ from telegram.ext import (
 from src.exceptions import BotException
 from src.logging import log_command
 from src.session import sessions
-from src.strategy import EntropyStrategy
+from src.strategy import *
 
 
 @log_command
@@ -52,7 +52,7 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Check for win
     if session.is_won():
         guess_count = len(session.guesses)
-        sessions.clear(update.effective_user.id, update.effective_chat.id)
+        sessions.reset(update.effective_user.id, update.effective_chat.id)
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=f"🎉 You won in {guess_count}/6 guesses!",
@@ -61,7 +61,7 @@ async def suggest_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Check for game over
     if session.is_complete():
-        sessions.clear(update.effective_user.id, update.effective_chat.id)
+        sessions.reset(update.effective_user.id, update.effective_chat.id)
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="Game over! You've used all 6 guesses. Use /newgame to start again.",
@@ -91,8 +91,8 @@ async def strategy_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = [
         [
-            InlineKeyboardButton("Entropy", callback_data="strategy_entropy"),
-            InlineKeyboardButton("Frequency", callback_data="strategy_frequency"),
+            InlineKeyboardButton("Entropy (Fast)", callback_data="strategy_entropy"),
+            InlineKeyboardButton("Minimax (Smart)", callback_data="strategy_minimax"),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -120,11 +120,16 @@ async def strategy_callback_handler(update: Update, context: ContextTypes.DEFAUL
 
     if query.data == "strategy_entropy":
         session.strategy = EntropyStrategy()
-        await query.edit_message_text(
-            text="You selected: Entropy\nYour session has been updated."
-        )
+    elif query.data == "strategy_minimax":
+        session.strategy = MinimaxStrategy()
     else:
         raise BotException(f"Unknown strategy: {query.data}")
+
+    await query.edit_message_text(
+        text=(
+            f"You selected: {session.strategy.name}\n" f"Your session has been updated."
+        )
+    )
 
 
 @log_command
@@ -136,17 +141,22 @@ async def newgame_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ):
         return
 
-    previous_count = sessions.clear(update.effective_user.id, update.effective_chat.id)
+    session = sessions.get(update.effective_user.id, update.effective_chat.id)
+    previous_count = len(session.guesses)
+    session.reset()
 
     if previous_count > 0:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f"New game started! (Previous game cleared at {previous_count}/6 guesses)",
+            text=(
+                f"New game started! (Previous game cleared at {previous_count}/6 guesses)\n"
+                f"Current Strategy: {session.strategy.name}"
+            ),
         )
     else:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="New game started!",
+            text=f"New game started!\nCurrent Strategy: {session.strategy.name}",
         )
 
 
@@ -166,10 +176,15 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
+    print("Beginning bot intialization...")
+
+    print("Fetching token...")
     bot_token = os.getenv("TELEGRAM_TOKEN")
     if not bot_token:
         raise ValueError("Telegram bot token not found")
+    print("Token successfully fetched.")
 
+    print("Registering handlers...")
     application = ApplicationBuilder().token(bot_token).build()
     application.add_handler(CommandHandler("suggest", suggest_handler))
     application.add_handler(CommandHandler("newgame", newgame_handler))
@@ -178,8 +193,15 @@ def main():
         CallbackQueryHandler(strategy_callback_handler, pattern="^strategy_")
     )
     application.add_error_handler(error_handler)
+    print("Handlers successfully registered.")
 
-    application.run_polling()
+    print("Bot successfully initialized.")
+
+    try:
+        print("Starting bot...")
+        application.run_polling()
+    finally:
+        print("Bot successfully shutdown.")
 
 
 if __name__ == "__main__":

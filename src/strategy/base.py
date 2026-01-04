@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import Counter
+from math import log2
 from pathlib import Path
 from typing import Optional
 
@@ -10,6 +11,12 @@ pattern_cache = {}
 
 
 class Strategy(ABC):
+
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Return the name of this strategy."""
+        ...
 
     def __init__(
         self,
@@ -51,6 +58,24 @@ class Strategy(ABC):
         pattern = "".join(result)
         pattern_cache[cache_key] = pattern
         return pattern
+
+    def _calculate_entropy(self, guess: str, possible_answers: list[str]) -> float:
+        """
+        Calculate the entropy (expected information gain) for a candidate guess.
+        Higher entropy = more evenly distributed feedback patterns = better guess.
+        """
+        pattern_counts: Counter[str] = Counter()
+        for answer in possible_answers:
+            pattern = self._get_feedback_pattern(guess, answer)
+            pattern_counts[pattern] += 1
+
+        total = len(possible_answers)
+        entropy = 0.0
+        for count in pattern_counts.values():
+            probability = count / total
+            entropy -= probability * log2(probability)
+
+        return entropy
 
     def _get_remaining_words(self, guesses: list[Guess]) -> list[tuple[str, float]]:
         """

@@ -1,5 +1,7 @@
 FROM python:3.14-slim
 
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
 # Install uv
@@ -16,5 +18,5 @@ COPY main.py ./
 COPY src/ ./src/
 COPY wordlists/ ./wordlists/
 
-# Run the bot
-CMD ["uv", "run", "python", "main.py"]
+# Run the bot - use exec to ensure signals reach Python
+CMD ["uv", "run", "python", "-u", "main.py"]
